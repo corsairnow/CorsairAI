@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "amp-sql-gen"
+version = "0.1.0"
+description = "FastAPI SQL generation microservice"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Amplivo CSRnow", email = "support@example.com" }]
+dependencies = [
+  "fastapi==0.115.0",
+  "uvicorn[standard]==0.30.6",
+  "pydantic==2.9.2",
+  "httpx==0.27.2",
+  "pydantic-settings>=2.5",
+  "sqlglot>=20.11.0"    # ← added
+]
+
+[project.optional-dependencies]
+dev = ["ruff>=0.5", "pytest>=8"]
+
+[tool.hatch.version]
+path = "app/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.setuptools]
+packages = ["app"]

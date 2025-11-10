@@ -1,0 +1,32 @@
+logs
+models
+scripts
+backups
+infra/compose/docker-compose.yml
+apps/amp-sql-gen/Dockerfile
+apps/amp-support-bot/Dockerfile
+apps/amp-translator/Dockerfile
+*.bin
+apps/amp-support-bot/app/__pycache__/
+*.egg-info/
+/apps/amp-support-bot/backup/
+/apps/amp-sql-gen/schema/shots.yaml
+
+# /apps/amp-support-bot/root/chats/
+# /apps/amp-support-bot/root/chroma/
+# /apps/amp-support-bot/root/kb/
+# /apps/amp-support-bot/root/locks/
+# /apps/amp-support-bot/root/uploads/
+
+
+/apps/amp-support-bot/root/
+/data/amp-support-bot/
+
+/infra/
+*__pycache__*/
+/apps/amp-support-bot/app/root/
+
+
+
+
+

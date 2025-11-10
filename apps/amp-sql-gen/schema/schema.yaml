@@ -1,0 +1,143 @@
+dialect: mysql
+timezone: UTC
+
+tables:
+  - name: user_payran
+    description: "Main user table — core user profile, sponsor structure, and business volumes."
+    columns: [
+      id, user_id, member_id, sponsor_id, sponsor_ids, personal_sponsor_id, personal_sponsor_ids,
+      gender, birthdate, status, rank, level, customer, abv, pgv, qbv, tsv, wtsv,
+      qualification_period_start, qualification_period_end, kyc_status, reg_site,
+      created_at, updated_at, registered_at
+    ]
+    columns_description:
+      id: "Primary identifier (bigint UNSIGNED)."
+      user_id: "User identifier referenced by related tables (bigint UNSIGNED)."
+      member_id: "Member reference ID (bigint UNSIGNED)."
+      sponsor_id: "Direct sponsor’s user_id (bigint UNSIGNED)."
+      sponsor_ids: "Serialized/upline chain (blob or text)."
+      personal_sponsor_id: "Personal sponsor’s user_id (bigint UNSIGNED)."
+      personal_sponsor_ids: "Serialized personal sponsor chain (blob or text)."
+      gender: "enum('male','female')."
+      birthdate: "Date of birth (date)."
+      status: "Account status: active, deleted, suspended, abandoned, lockout (varchar)."
+      rank: "User rank (tinyint)."
+      level: "Network depth level (tinyint)."
+      customer: "Customer type flag (tinyint)."
+      abv: "Accumulated Business Volume (decimal(64,24))."
+      pgv: "Personal Group Volume (decimal(64,24))."
+      qbv: "Qualification Business Volume (decimal(64,24))."
+      tsv: "Team Sales Volume (decimal(64,24)); can go negative."
+      wtsv: "Weekly Team Sales Volume (decimal(64,24))."
+      qualification_period_start: "Start date of qualification period (date)."
+      qualification_period_end: "End date of qualification period (date)."
+      kyc_status: "Indicates the current verification state of the user's KYC process Possible values include : approved, pending, submitted, dropped, rejected"
+      reg_site: "Registration source site (int UNSIGNED)."
+      created_at: "Record creation timestamp."
+      updated_at: "Record update timestamp."
+      registered_at: "User registration timestamp."
+
+  - name: user_teamsite_license
+    description: "Licenses/subscriptions for users. ‘active license’/‘valid license’ → include end > NOW(); ‘expired/inactive license’ → include end <= NOW()."
+    columns: [id, user_id, gift_code_id, type, start, end, created_at, updated_at]
+    columns_description:
+      id: "Primary key (bigint UNSIGNED)."
+      user_id: "FK → user_payran.user_id (bigint UNSIGNED)."
+      gift_code_id: "Related gift code (bigint UNSIGNED)."
+      type: "License type (int)."
+      start: "Start timestamp."
+      end: "End/expiry timestamp."
+      created_at: "Created timestamp."
+      updated_at: "Updated timestamp."
+
+  - name: member_paths
+    description: "Hierarchy of users (upline/downline)."
+    columns: [ancestor_id, descendant_id, depth]
+    columns_description:
+      ancestor_id: "Ancestor/upline user_id (int)."
+      descendant_id: "Descendant/downline user_id (int)."
+      depth: "Distance between ancestor and descendant (0 = same user)."
+
+  - name: deposits
+    description: "User deposit transactions."
+    columns: [
+      id, user_id, currency_id, amount, exchange_rate, exchange_amount, account_type,
+      business_name, deposit_option_id, status, reference_no, created_at, updated_at
+    ]
+    columns_description:
+      id: "Primary key (bigint UNSIGNED)."
+      user_id: "FK → user_payran.user_id (bigint UNSIGNED)."
+      currency_id: "Currency ID (bigint UNSIGNED)."
+      amount: "Deposit amount (decimal(64,2))."
+      exchange_rate: "Exchange rate (decimal(64,20))."
+      exchange_amount: "Converted amount (decimal(64,2))."
+      account_type: "Source account type (varchar)."
+      business_name: "Business name/source (varchar)."
+      deposit_option_id: "Deposit option ID (bigint UNSIGNED)."
+      status: "0=pending, 1=approved, 2=rejected (tinyint)."
+      reference_no: "Reference number (varchar(191))."
+      created_at: "Created timestamp."
+      updated_at: "Updated timestamp."
+
+  - name: withdrawals
+    description: "Withdrawal requests and processing details."
+    columns: [
+      id, user_id, wallet_id, amount, withdrawal_fee, received_amount,
+      blockchain, transaction_hash, status, approved_by, pre_approved_by,
+      reference_no, created_at, updated_at
+    ]
+    columns_description:
+      id: "Primary key (bigint UNSIGNED)."
+      user_id: "FK → user_payran.user_id (bigint UNSIGNED)."
+      wallet_id: "Wallet/source ID (bigint UNSIGNED)."
+      amount: "Requested amount (decimal)."
+      withdrawal_fee: "Fee amount (decimal)."
+      received_amount: "Net received amount (decimal)."
+      blockchain: "Blockchain name if crypto (varchar)."
+      transaction_hash: "Blockchain tx hash (varchar)."
+      status: "0=pending, 1=completed, 2=rejected… (tinyint)."
+      approved_by: "Approver admin user (bigint UNSIGNED)."
+      pre_approved_by: "Pre-approver admin user (bigint UNSIGNED)."
+      reference_no: "Reference (varchar(191))."
+      created_at: "Created timestamp."
+      updated_at: "Updated timestamp."
+
+  - name: users
+    description: "User details, including login information."
+    columns: [id, external_id, last_login_at, remember_token, created_at, updated_at]
+    columns_description:
+      id: "Primary key (bigint UNSIGNED)."
+      external_id: "External identifier (bigint UNSIGNED)."
+      last_login_at: "Timestamp of the last login (timestamp)."
+      remember_token: "Remember token for the session (varchar(191))."
+      created_at: "Account creation timestamp."
+      updated_at: "Last account update timestamp."
+      
+  # - name: purchase
+  #   description: "Product/license purchases."
+  #   columns: [id, user_id, price, kgs, bv, product_type, transaction_id, created_at, updated_at]
+  #   columns_description:
+  #     id: "Primary key (bigint UNSIGNED)."
+  #     user_id: "FK → user_payran.user_id (bigint UNSIGNED)."
+  #     price: "Purchase amount (decimal(64,24))."
+  #     kgs: "Quantity (decimal(8,2))."
+  #     bv: "Business volume points (int)."
+  #     product_type: "1=Product, 2=License (tinyint)."
+  #     transaction_id: "Related transaction (bigint UNSIGNED)."
+  #     created_at: "Created timestamp."
+  #     updated_at: "Updated timestamp."
+
+joins:
+  - left: member_paths.descendant_id
+    right: user_payran.id        # <-- critical for hierarchy
+  - left: user_teamsite_license.user_id
+    right: user_payran.user_id
+  - left: users.id
+    right: user_payran.user_id
+  - left: deposits.user_id
+    right: user_payran.user_id
+  - left: withdrawals.user_id
+    right: user_payran.user_id
+  # - left: purchase.user_id
+  #   right: user_payran.user_id
+  
